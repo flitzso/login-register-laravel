@@ -1,0 +1,131 @@
+
+ -------------- 
+|Front ReactJs |
+ -------------- 
+
+npx create-react-app login-system-client
+
+npm install axios
+
+ ------------------ 
+|Arvore do projeto |
+ ------------------
+
+components=>
+  ->Register.js
+  ->Login.js 
+  ->Register.js
+
+page=>
+ ->Home.js
+
+ ------------- 
+|Back Laravel |
+ -------------
+
+composer create-project --prefer-dist laravel/laravel login-system-laravel
+cd login-system-laravel
+code .
+
+ ---------------- 
+|Criando api.php |
+ ----------------
+
+php artisan install:api
+ 
+ ------------------- 
+|Banco de dados .env|
+ -------------------
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=system_db
+DB_USERNAME=root
+DB_PASSWORD=vip1234
+
+ ---------------- 
+|Migratio Tabelas|
+ ----------------
+
+php artisan make:migration create_users_table --create=users
+
+// database/migrations/xxxx_xx_xx_xxxxxx_create_users_table.php
+
+public function up()
+{
+    Schema::create('users', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('email')->unique();
+        $table->string('password');
+        $table->timestamps();
+    });
+}
+
+php artisan migrate
+
+ -----------
+|Controller |
+ -----------
+
+php artisan make:controller AuthController
+
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+
+class AuthController extends Controller
+{
+    public function register(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        return response()->json($user, 201);
+    }
+
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|string|email',
+            'password' => 'required|string',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
+        }
+
+        return response()->json($user, 200);
+    }
+}
+
+ -----
+|ROTAS|
+ -----
+
+// routes/api.php
+
+use App\Http\Controllers\AuthController;
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+
+
+
