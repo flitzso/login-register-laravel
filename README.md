@@ -1,1 +1,6 @@
-# login-register-laravel
+# login-register-laravel #
+
+
+ ### composer install 
+### cp .env.example .env 
+### php artisan key:generate
